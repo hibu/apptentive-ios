@@ -140,9 +140,11 @@
 			if (predicate) {
 				criteriaAreMet = [predicate evaluateWithObject:[usageData predicateEvaluationDictionary]];
 				if (!criteriaAreMet) {
-					ATLogInfo(@"Interaction predicate failed evaluation.");
-					ATLogInfo(@"Predicate: %@", predicate);
-					ATLogInfo(@"Interaction usage data: %@", [usageData predicateEvaluationDictionary]);
+					//TODO: Log this information in a more user friendly and useful way.
+					
+					//ATLogInfo(@"Interaction predicate failed evaluation.");
+					//ATLogInfo(@"Predicate: %@", predicate);
+					//ATLogInfo(@"Interaction usage data: %@", [usageData predicateEvaluationDictionary]);
 				}
 			} else {
 				ATLogError(@"Could not create a valid criteria predicate for the Interaction criteria: %@", self.criteria);
@@ -150,7 +152,7 @@
 			}
 		}
 		@catch (NSException *exception) {
-			ATLogError(@"Exception while processing critera.");
+			ATLogError(@"Exception while processing criteria.");
 			criteriaAreMet = NO;
 		}
 	}

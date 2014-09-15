@@ -111,6 +111,8 @@ static NSDateFormatter *dateFormatter = nil;
 			case UIInterfaceOrientationLandscapeRight:
 				origin = CGPointMake(0, 0);
 				break;
+			default:
+				break;
 		}
 		[screenshot drawAtPoint:origin];
 		UIImage *screenshotPlusStatusBar = UIGraphicsGetImageFromCurrentImageContext();
@@ -136,6 +138,8 @@ static NSDateFormatter *dateFormatter = nil;
 			break;
 		case UIInterfaceOrientationLandscapeRight:
 			imageOrientation = UIImageOrientationLeft;
+			break;
+		default:
 			break;
 	}
 	UIImage *rotated = [[[UIImage alloc] initWithCGImage:[image CGImage] scale:1 orientation:imageOrientation] autorelease];
@@ -339,6 +343,22 @@ static NSDateFormatter *dateFormatter = nil;
 	}
 }
 
++ (UIColor *)contrastingTextColorForBackgroundColor:(UIColor *)backgroundColor {
+	const CGFloat *componentColors = CGColorGetComponents(backgroundColor.CGColor);
+	
+    CGFloat colorBrightness = ((componentColors[0] * 299) + (componentColors[1] * 587) + (componentColors[2] * 114)) / 1000;
+    
+	UIColor *textColor;
+	
+	if (colorBrightness < 0.5) {
+		textColor = [UIColor whiteColor];
+    } else {
+		textColor = [UIColor blackColor];
+    }
+	
+	return textColor;
+}
+
 #elif TARGET_OS_MAC
 
 + (NSData *)pngRepresentationOfImage:(NSImage *)image {
@@ -383,7 +403,7 @@ static NSDateFormatter *dateFormatter = nil;
 }
 
 + (NSString *)currentSystemVersion {
-#if TARGET_OS_PHONE
+#if TARGET_OS_IPHONE
 	return [[UIDevice currentDevice] systemVersion];
 #elif TARGET_OS_MAC
 	NSProcessInfo *info = [NSProcessInfo processInfo];
@@ -600,6 +620,11 @@ static NSDateFormatter *dateFormatter = nil;
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
 		NSArray *iconFiles = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIconFiles"];
+		if (!iconFiles) {
+			// Asset Catalog app icons
+			iconFiles = [NSBundle mainBundle].infoDictionary[@"CFBundleIcons"][@"CFBundlePrimaryIcon"][@"CFBundleIconFiles"];
+		}
+		
 		UIImage *maxImage = nil;
 		for (NSString *path in iconFiles) {
 			UIImage *image = [UIImage imageNamed:path];

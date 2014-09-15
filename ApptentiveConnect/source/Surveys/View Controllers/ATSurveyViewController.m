@@ -185,7 +185,6 @@ enum {
 		[hud autorelease];
 	}
 	
-	NSDictionary *notificationInfo = [[NSDictionary alloc] initWithObjectsAndKeys:survey.identifier, ATSurveyIDKey, nil];
 	NSDictionary *metricsInfo = [[NSDictionary alloc] initWithObjectsAndKeys:survey.identifier, ATSurveyMetricsSurveyIDKey, [NSNumber numberWithInt:ATSurveyWindowTypeSurvey], ATSurveyWindowTypeKey, [NSNumber numberWithInt:ATSurveyEventTappedSend], ATSurveyMetricsEventKey, nil];
 	
 	[[ATEngagementBackend sharedBackend] engageApptentiveEvent:ATInteractionSurveyEventLabelSend fromInteraction:self.interaction fromViewController:self userInfo:metricsInfo];
@@ -195,8 +194,8 @@ enum {
 	
 	[self.navigationController dismissViewControllerAnimated:YES completion:NULL];
 	
+	NSDictionary *notificationInfo = @{ATSurveyIDKey: (survey.identifier ?: [NSNull null])};
 	[[NSNotificationCenter defaultCenter] postNotificationName:ATSurveySentNotification object:nil userInfo:notificationInfo];
-	[notificationInfo release], notificationInfo = nil;
 	
 	[response release], response = nil;
 }
@@ -353,7 +352,9 @@ enum {
 			buttonCell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:ATSurveySendCellIdentifier] autorelease];
 			buttonCell.textLabel.text = ATLocalizedString(@"Send Response", @"Survey send response button title");
 			buttonCell.textLabel.textAlignment = NSTextAlignmentCenter;
-			buttonCell.textLabel.textColor = self.view.tintColor;
+			if ([self.view respondsToSelector:@selector(tintColor)]) {
+				buttonCell.textLabel.textColor = self.view.tintColor;
+			}
 			buttonCell.selectionStyle = UITableViewCellSelectionStyleBlue;
 		}
 		return buttonCell;
@@ -551,17 +552,34 @@ enum {
 				if (maxSelections == 0) {
 					maxSelections = NSUIntegerMax;
 				}
-				if (isChecked == NO && question.type == ATSurveyQuestionTypeMultipleSelect && [[question selectedAnswerChoices] count] == maxSelections) {
-					// Do nothing if unchecked and have already selected the maximum number of answers.
-				} else if (isChecked == NO) {
-					cell.accessoryType = UITableViewCellAccessoryCheckmark;
-					[question addSelectedAnswerChoice:answer];
-				} else if (isChecked) {
+				
+				BOOL deselectOtherAnswers = NO;
+				
+				if (isChecked) {
+					// Tapping a previously selected answer unselects it.
 					cell.accessoryType = UITableViewCellAccessoryNone;
 					[question removeSelectedAnswerChoice:answer];
+				} else if (!isChecked) {
+					// Select the new answer and deselect previous answer.
+					// A MultipleSelect with 1 max selection is essentially a MultipleChoice.
+					if (question.type == ATSurveyQuestionTypeMultipleChoice || (question.type == ATSurveyQuestionTypeMultipleSelect && maxSelections == 1)) {
+						cell.accessoryType = UITableViewCellAccessoryCheckmark;
+						[question addSelectedAnswerChoice:answer];
+						deselectOtherAnswers = YES;
+					} else if (question.type == ATSurveyQuestionTypeMultipleSelect) {
+						if (question.selectedAnswerChoices.count == maxSelections) {
+							// Do nothing; maximum number of answers have already been selected.
+							// Survey taker must manually deselect previous answers first.
+						} else {
+							cell.accessoryType = UITableViewCellAccessoryCheckmark;
+							[question addSelectedAnswerChoice:answer];
+							deselectOtherAnswers = NO;
+						}
+					}
 				}
-				// Deselect the other cells.
-				if (question.type == ATSurveyQuestionTypeMultipleChoice) {
+				
+				// Deselect previous answers, if needed.
+				if (deselectOtherAnswers) {
 					UITableViewCell *otherCell = nil;
 					for (NSUInteger i = 1; i < [self tableView:aTableView numberOfRowsInSection:indexPath.section]; i++) {
 						if (i != indexPath.row) {

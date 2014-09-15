@@ -1,3 +1,85 @@
+2014-09-12 pkamb v1.5.7
+--------------------------------
+
+This release adds a number of small fixes for Xcode 6 and iOS 8. We've updated the project to use Xcode 6's default settings, and fixed a number of warnings that surfaced in Xcode 6.
+
+We have also added an `ATSurveyShownNotification` notification when a survey is shown.
+
+We are now immediately updating new Push Notification integrations to the server, which will make for easier testing of new integrations. These were previously batched with device updates.
+
+This release fixes a malformed image that caused a `pngcrush` error in Xcode CI builds.
+
+Finally, we removed a debug background color that slipped into the iOS 6 Message Center's textfield.
+
+2014-08-24 pkamb v1.5.6
+--------------------------------
+
+This release adds initial iOS 8 support to the Apptentive SDK.
+
+Specifically, an issue has been fixed where Message Center messages are not displayed in iOS 8. An iPad layout issue has also been fixed.
+
+We will continue to add fixes as we test Apptentive with the latest iOS 8 beta releases. If you identify iOS 8 issues in the SDK, please contact us by opening a [GitHub issue](https://github.com/apptentive/apptentive-ios/issues)!
+
+This release also adds support for displaying Asset Catalog app icons.
+
+2014-08-19 pkamb v1.5.5
+--------------------------------
+
+This release improves the Message Center user interface. The Message Center background is now white, rather than a transparent panel. Message bubbles now appear in the tint color of your app, or the tint color you set on ATConnect. Default profile pictures have been improved, and other small improvements have been made.
+
+This release also improves error handling when creating Events with `customData`. An Event's `customData` dictionary will only be sent if it conforms to the `isValidJSONObject:` method of `NSJSONSerialization`.
+
+Finally, `addParseIntegrationWithDeviceToken:` has been added for integrating with Parse's Push Notification service.
+
+2014-07-21 pkamb v1.5.4
+--------------------------------
+
+This release changes the App Store rating URL to open the "Reviews" tab directly in iOS 7.1+. #110
+
+We have also fixed an issue where the text selection loupe showed through Message Panel to the view beneath. #114
+
+French Canadian localization strings have been added to the SDK. iOS 8 is required to differentiate between French and French Canadian.
+
+Finally, we have added new API methods for attaching `customData` and `extendedData` to events:  
+
+  - `engage:withCustomData:fromViewController:` 
+  - `engage:withCustomData:withExtendedData:fromViewController:`
+  
+We have also added methods to easily construct these `extendedData` dictionaries in the specific Apptentive format:  
+
+  - `extendedDataDate:`
+  - `extendedDataLocationForLatitude:longitude:`
+  - `extendedDataCommerceWithTransactionID:affiliation:revenue:shipping:tax:currency:commerceItems:`
+  - `extendedDataCommerceItemWithItemID:name:category:price:quantity:currency:`
+
+2014-06-30 pkamb v1.5.3
+--------------------------------
+
+This release fixes an issue where the Rating Prompt's "Require Email" option was not being utilized.
+
+Support has also been added for remote configuration of Apptentive branding. Depending on your Apptentive plan, branding can now be toggled remotely.
+
+Branding was formerly controlled by the `showTagLine` property, which has now been removed. The `initiallyHideBranding` property has been provided to control the app's initial experience before Apptentive's server-based configuration can be fetched.
+
+2014-06-12 pkamb v1.5.2
+--------------------------------
+
+This release fixes a crash when submitting a piece of Feedback without an email address after tapping "No" on the Enjoyment Dialog. This bug affected versions 1.4.3, 1.5.0, and 1.5.1. If you are using one of these releases, we strongly recommend you upgrade your Apptentive SDK as soon as possible.
+
+Additionally, the current iOS version is now logged as, for example, "7.1.1" whereas it was formerly "Version 7.1.1 (Build 11D201)".
+
+2014-06-10 wooster, pkamb v1.5.1
+--------------------------------
+
+This release fixes a crash when showing Surveys in iOS 5 or iOS 6 from Apptentive v1.5.0. Surveys have additionally been disabled remotely for devices using Apptentive 1.5.0 and running an OS version prior to iOS 7. We recommend upgrading immediately from 1.5.0 if you are using Surveys and support legacy devices.
+
+This release also includes fixes for the new [CocoaPods Trunk](http://blog.cocoapods.org/CocoaPods-Trunk/) service and release process.
+
+The `showTagLine` property of `ATConnect` now makes the "Powered By Apptentive" logo in Message Center unclickable in addition to hidden.
+
+Finally, we have changed the language code used for delivering localizations to use `[[NSLocale preferredLanguages] firstObject]` rather than use the `NSLocaleLanguageCode` locale component.
+
+
 2014-05-27 wooster, pkamb v1.5.0
 --------------------------------
 

@@ -97,9 +97,15 @@ NSString *const ATEngagementCodePointApptentiveAppInteractionKey = @"app";
 }
 
 - (BOOL)shouldRetrieveNewEngagementManifest {
+	
+	BOOL alwaysRetrieveManifest = NO;
 #if APPTENTIVE_DEBUG
-	return YES;
+	alwaysRetrieveManifest = YES;
 #endif
+	if (alwaysRetrieveManifest) {
+		return YES;
+	}
+	
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	
 	NSDate *expiration = [defaults objectForKey:ATEngagementCachedInteractionsExpirationPreferenceKey];
@@ -172,7 +178,6 @@ NSString *const ATEngagementCodePointApptentiveAppInteractionKey = @"app";
 
 - (NSArray *)interactionsForCodePoint:(NSString *)codePoint {
 	NSArray *interactions = [codePointInteractions objectForKey:codePoint];
-	ATLogInfo(@"Found %lu cached interactions for code point: %@", interactions.count, codePoint);
 	
 	return interactions;
 }
@@ -181,12 +186,10 @@ NSString *const ATEngagementCodePointApptentiveAppInteractionKey = @"app";
 	NSArray *interactions = [self interactionsForCodePoint:codePoint];
 	for (ATInteraction *interaction in interactions) {
 		if ([interaction isValid]) {
-			ATLogInfo(@"Found valid %@ interaction for code point: %@", interaction.type, codePoint);
 			return interaction;
 		}
 	}
 	
-	ATLogInfo(@"No valid Apptentive interactions found for code point: %@", codePoint);
 	return nil;
 }
 
@@ -205,6 +208,10 @@ NSString *const ATEngagementCodePointApptentiveAppInteractionKey = @"app";
 	return [[ATEngagementBackend sharedBackend] engageEvent:eventLabel fromVendor:ATEngagementCodePointHostAppVendorKey fromInteraction:ATEngagementCodePointHostAppInteractionKey userInfo:nil fromViewController:viewController];
 }
 
+- (BOOL)engageLocalEvent:(NSString *)eventLabel userInfo:(NSDictionary *)userInfo customData:(NSDictionary *)customData extendedData:(NSArray *)extendedData fromViewController:(UIViewController *)viewController {
+	return [[ATEngagementBackend sharedBackend] engageEvent:eventLabel fromVendor:ATEngagementCodePointHostAppVendorKey fromInteraction:ATEngagementCodePointHostAppInteractionKey userInfo:userInfo customData:customData extendedData:extendedData fromViewController:viewController];
+}
+
 - (BOOL)engageApptentiveAppEvent:(NSString *)eventLabel userInfo:(NSDictionary *)userInfo {
 	return [[ATEngagementBackend sharedBackend] engageEvent:eventLabel fromVendor:ATEngagementCodePointApptentiveVendorKey fromInteraction:ATEngagementCodePointApptentiveAppInteractionKey userInfo:userInfo fromViewController:nil];
 }
@@ -218,28 +225,49 @@ NSString *const ATEngagementCodePointApptentiveAppInteractionKey = @"app";
 }
 
 - (BOOL)engageEvent:(NSString *)eventLabel fromVendor:(NSString *)vendor fromInteraction:(NSString *)interaction userInfo:(NSDictionary *)userInfo fromViewController:(UIViewController *)viewController {
+	return [[ATEngagementBackend sharedBackend] engageEvent:eventLabel fromVendor:vendor fromInteraction:interaction userInfo:userInfo customData:nil extendedData:nil fromViewController:viewController];
+}
+
+- (BOOL)engageEvent:(NSString *)eventLabel fromVendor:(NSString *)vendor fromInteraction:(NSString *)interaction userInfo:(NSDictionary *)userInfo customData:(NSDictionary *)customData extendedData:(NSArray *)extendedData fromViewController:(UIViewController *)viewController {
 	NSString *encodedVendor = [ATEngagementBackend stringByEscapingCodePointSeparatorCharactersInString:vendor];
 	NSString *encodedInteraction = [ATEngagementBackend stringByEscapingCodePointSeparatorCharactersInString:interaction];
 	NSString *encodedEventLabel = [ATEngagementBackend stringByEscapingCodePointSeparatorCharactersInString:eventLabel];
 	
 	NSString *codePoint = [NSString stringWithFormat:@"%@#%@#%@", encodedVendor, encodedInteraction, encodedEventLabel];
 
-	return [[ATEngagementBackend sharedBackend] engage:codePoint userInfo:userInfo fromViewController:viewController];
+	return [[ATEngagementBackend sharedBackend] engage:codePoint userInfo:userInfo customData:customData extendedData:extendedData fromViewController:viewController];
 }
 
 - (BOOL)engage:(NSString *)codePoint userInfo:(NSDictionary *)userInfo fromViewController:(UIViewController *)viewController {
-	[[ApptentiveMetrics sharedMetrics] addMetricWithName:codePoint info:userInfo];
+	return [self engage:codePoint userInfo:userInfo customData:nil extendedData:nil fromViewController:viewController];
+}
+
+- (BOOL)engage:(NSString *)codePoint userInfo:(NSDictionary *)userInfo customData:(NSDictionary *)customData extendedData:(NSArray *)extendedData fromViewController:(UIViewController *)viewController {
+	ATLogInfo(@"Engage Apptentive event: %@", codePoint);
+	
+	[[ApptentiveMetrics sharedMetrics] addMetricWithName:codePoint info:userInfo customData:customData extendedData:extendedData];
 	
 	[self codePointWasEngaged:codePoint];
-	
 	BOOL didEngageInteraction = NO;
-	ATInteraction *interaction = [self interactionForCodePoint:codePoint];
-	if (interaction) {
-		[self presentInteraction:interaction fromViewController:viewController];
-		[self interactionWasEngaged:interaction];
-		didEngageInteraction = YES;
-		// Sync defaults so user doesn't see interaction more than once.
-		[[NSUserDefaults standardUserDefaults] synchronize];
+	
+	NSArray *interactions = [codePointInteractions objectForKey:codePoint];
+	ATLogInfo(@"%@", [NSString stringWithFormat:@"--Found %tu available interaction%@.", interactions.count, (interactions.count == 1) ? @"" : @"s"]);
+	
+	if (interactions.count > 0) {
+		ATInteraction *interaction = [self interactionForCodePoint:codePoint];
+		if (interaction) {
+			ATLogInfo(@"--Running valid %@ interaction.", interaction.type, codePoint);
+			ATLogInfo(@"");
+			[self presentInteraction:interaction fromViewController:viewController];
+			[self interactionWasEngaged:interaction];
+			didEngageInteraction = YES;
+			// Sync defaults so user doesn't see interaction more than once.
+			[[NSUserDefaults standardUserDefaults] synchronize];
+		} else {
+			ATLogInfo(@"--Criteria not met for available interaction%@.", (interactions.count == 1) ? @"" : @"s");
+			ATLogInfo(@"--There are no valid Apptentive interactions to run at this time.");
+			ATLogInfo(@"");
+		}
 	}
 	
 	return didEngageInteraction;

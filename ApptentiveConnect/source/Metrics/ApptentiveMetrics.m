@@ -105,13 +105,42 @@ static NSString *ATMetricNameMessageCenterThankYouClose = @"message_center.thank
 
 
 - (void)addMetricWithName:(NSString *)name info:(NSDictionary *)userInfo {
+	[self addMetricWithName:name info:userInfo customData:nil extendedData:nil];
+}
+
+- (void)addMetricWithName:(NSString *)name info:(NSDictionary *)userInfo customData:(NSDictionary *)customData extendedData:(NSArray *)extendedData {
 	if (metricsEnabled == NO) {
 		return;
 	}
 	ATEvent *event = (ATEvent *)[ATData newEntityNamed:@"ATEvent"];
 	[event setup];
 	event.label = name;
-	[event addEntriesFromDictionary:userInfo];
+	
+	if (userInfo) {
+		[event addEntriesFromDictionary:@{@"data": userInfo}];
+	}
+	if (customData) {
+		NSDictionary *customDataDictionary = @{@"custom_data": customData};
+		if ([NSJSONSerialization isValidJSONObject:customDataDictionary]) {
+			[event addEntriesFromDictionary:customDataDictionary];
+		} else {
+			ATLogError(@"Event `customData` cannot be transformed into valid JSON and will be ignored.");
+			ATLogError(@"Please see NSJSONSerialization's `+isValidJSONObject:` for allowed types.");
+		}
+	}
+
+	if (extendedData) {
+		for (NSDictionary *data in extendedData) {
+			if ([NSJSONSerialization isValidJSONObject:data]) {
+				// Extended data items are not added for key "extended_data", but rather for key of extended data type: "time", "location", etc.
+				[event addEntriesFromDictionary:data];
+			} else {
+				ATLogError(@"Event `extendedData` cannot be transformed into valid JSON and will be ignored.");
+				ATLogError(@"Please see NSJSONSerialization's `+isValidJSONObject:` for allowed types.");
+			}
+		}
+	}
+	
 	if (![ATData save]) {
 		[event release], event = nil;
 		return;

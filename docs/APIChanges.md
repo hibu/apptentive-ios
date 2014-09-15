@@ -1,5 +1,37 @@
 This document tracks changes to the API between versions.
 
+# 1.5.7
+
+ * Added `ATSurveyShownNotification` notification when a survey is shown.
+
+# 1.5.5
+
+ * Added `addParseIntegrationWithDeviceToken:` for integrating with Parse's Push Notification service.
+
+# 1.5.4
+ * Changed the App Store rating URL to open the "Reviews" tab directly in iOS 7.1+.
+ 
+ * Added API methods for attaching `customData` and `extendedData` to events:  
+  - `engage:withCustomData:fromViewController:` 
+  - `engage:withCustomData:withExtendedData:fromViewController:`
+  
+ * Added methods to easily construct `extendedData` dictionaries in the specific Apptentive format:  
+  - `extendedDataDate:`
+  - `extendedDataLocationForLatitude:longitude:`
+  - `extendedDataCommerceWithTransactionID:affiliation:revenue:shipping:tax:currency:commerceItems:`
+  - `extendedDataCommerceItemWithItemID:name:category:price:quantity:currency:`
+  
+# 1.5.3
+ 
+ * Added ability to remotely hide Apptentive branding in your app via the Apptentive dashboard, contingent upon your account plan.
+ * Added `initiallyHideBranding` property, which hides Apptentive branding in the time prior to the app's initial configuration being retrieved.
+ * Removed `showTagLine` property, which has been replaced by `initiallyHideBranding` and the remote configuration.
+
+# 1.5.1
+
+ * The `showTagLine` property of `ATConnect` now makes the "Powered By Apptentive" logo in Message Center unclickable.
+ * The language code used for delivering localizations now uses `[[NSLocale preferredLanguages] firstObject]` rather than the `NSLocaleLanguageCode` locale component.
+
 # 1.5.0
 
 Surveys are now targeted at Apptentive events via your online dashboard. Log events in your app by calling `engage:fromViewController`.

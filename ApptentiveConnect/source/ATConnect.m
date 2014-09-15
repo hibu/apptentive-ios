@@ -34,6 +34,7 @@ NSString *const ATMessageCenterUnreadCountChangedNotification = @"ATMessageCente
 
 NSString *const ATAppRatingFlowUserAgreedToRateAppNotification = @"ATAppRatingFlowUserAgreedToRateAppNotification";
 
+NSString *const ATSurveyShownNotification = @"ATSurveyShownNotification";
 NSString *const ATSurveySentNotification = @"ATSurveySentNotification";
 NSString *const ATSurveyIDKey = @"ATSurveyIDKey";
 
@@ -43,12 +44,13 @@ NSString *const ATInitialUserEmailAddressKey = @"ATInitialUserEmailAddressKey";
 NSString *const ATIntegrationKeyUrbanAirship = @"urban_airship";
 NSString *const ATIntegrationKeyKahuna = @"kahuna";
 NSString *const ATIntegrationKeyAmazonSNS = @"aws_sns";
+NSString *const ATIntegrationKeyParse = @"parse";
 
 NSString *const ATConnectCustomPersonDataChangedNotification = @"ATConnectCustomPersonDataChangedNotification";
 NSString *const ATConnectCustomDeviceDataChangedNotification = @"ATConnectCustomDeviceDataChangedNotification";
 
 @implementation ATConnect
-@synthesize apiKey, appID, debuggingOptions, showTagline, showEmailField, initialUserName, initialUserEmailAddress, customPlaceholderText, useMessageCenter;
+@synthesize apiKey, appID, debuggingOptions, showEmailField, initialUserName, initialUserEmailAddress, customPlaceholderText, useMessageCenter;
 #if TARGET_OS_IPHONE
 @synthesize tintColor;
 #endif
@@ -65,15 +67,17 @@ NSString *const ATConnectCustomDeviceDataChangedNotification = @"ATConnectCustom
 - (id)init {
 	if ((self = [super init])) {
 		self.showEmailField = YES;
-		self.showTagline = YES;
 		customPersonData = [[NSMutableDictionary alloc] init];
 		customDeviceData = [[NSMutableDictionary alloc] init];
 		integrationConfiguration = [[NSMutableDictionary alloc] init];
 		useMessageCenter = YES;
 		_initiallyUseMessageCenter = YES;
+		_initiallyHideBranding = NO;
 		
-		NSDictionary *defaults = @{ATAppConfigurationMessageCenterEnabledKey : [NSNumber numberWithBool:_initiallyUseMessageCenter],
-								   ATAppConfigurationMessageCenterEmailRequiredKey : [NSNumber numberWithBool:NO]};
+		NSDictionary *defaults = @{ATAppConfigurationMessageCenterEnabledKey: @(_initiallyUseMessageCenter),
+								   ATAppConfigurationMessageCenterEmailRequiredKey: @NO,
+								   ATAppConfigurationHideBrandingKey: @(_initiallyHideBranding)
+								   };
 		[[NSUserDefaults standardUserDefaults] registerDefaults:defaults];
 		
 		ATLogInfo(@"Apptentive SDK Version %@", kATConnectVersionString);
@@ -112,6 +116,11 @@ NSString *const ATConnectCustomDeviceDataChangedNotification = @"ATConnectCustom
 		apiKey = [anAPIKey retain];
 		[[ATBackend sharedBackend] setApiKey:self.apiKey];
 	}
+}
+
+- (void)setInitiallyHideBranding:(BOOL)initiallyHideBranding {
+	[[NSUserDefaults standardUserDefaults] registerDefaults:@{ATAppConfigurationHideBrandingKey: @(initiallyHideBranding)}];
+	_initiallyHideBranding = initiallyHideBranding;
 }
 
 - (void)setInitiallyUseMessageCenter:(BOOL)initiallyUseMessageCenter {
@@ -257,6 +266,8 @@ NSString *const ATConnectCustomDeviceDataChangedNotification = @"ATConnectCustom
 
 - (void)addIntegration:(NSString *)integration withConfiguration:(NSDictionary *)configuration {
 	[integrationConfiguration setObject:configuration forKey:integration];
+	
+	[[NSNotificationCenter defaultCenter] postNotificationName:ATConnectCustomDeviceDataChangedNotification object:customDeviceData];
 }
 
 - (void)addIntegration:(NSString *)integration withDeviceToken:(NSData *)deviceToken {
@@ -271,6 +282,8 @@ NSString *const ATConnectCustomDeviceDataChangedNotification = @"ATConnectCustom
 
 - (void)removeIntegration:(NSString *)integration {
 	[integrationConfiguration removeObjectForKey:integration];
+	
+	[[NSNotificationCenter defaultCenter] postNotificationName:ATConnectCustomDeviceDataChangedNotification object:customDeviceData];
 }
 
 - (void)addUrbanAirshipIntegrationWithDeviceToken:(NSData *)deviceToken {
@@ -279,6 +292,10 @@ NSString *const ATConnectCustomDeviceDataChangedNotification = @"ATConnectCustom
 
 - (void)addAmazonSNSIntegrationWithDeviceToken:(NSData *)deviceToken {
 	[self addIntegration:ATIntegrationKeyAmazonSNS withDeviceToken:deviceToken];
+}
+
+- (void)addParseIntegrationWithDeviceToken:(NSData *)deviceToken {
+	[self addIntegration:ATIntegrationKeyParse withDeviceToken:deviceToken];
 }
 
 - (BOOL)messageCenterEnabled {
@@ -293,6 +310,113 @@ NSString *const ATConnectCustomDeviceDataChangedNotification = @"ATConnectCustom
 
 - (BOOL)engage:(NSString *)eventLabel fromViewController:(UIViewController *)viewController {
 	return [[ATEngagementBackend sharedBackend] engageLocalEvent:eventLabel fromViewController:viewController];
+}
+
+- (BOOL)engage:(NSString *)eventLabel withCustomData:(NSDictionary *)customData fromViewController:(UIViewController *)viewController {
+	return [[ATEngagementBackend sharedBackend] engageLocalEvent:eventLabel userInfo:nil customData:customData extendedData:nil fromViewController:viewController];
+}
+
+- (BOOL)engage:(NSString *)eventLabel withCustomData:(NSDictionary *)customData withExtendedData:(NSArray *)extendedData fromViewController:(UIViewController *)viewController {
+	return [[ATEngagementBackend sharedBackend] engageLocalEvent:eventLabel userInfo:nil customData:customData extendedData:extendedData fromViewController:viewController];
+}
+
++ (NSDictionary *)extendedDataDate:(NSDate *)date {
+	NSDictionary *time = @{@"time": @{@"version": @1,
+									  @"timestamp": @([date timeIntervalSince1970])
+									  }
+						   };
+	return time;
+}
+
++ (NSDictionary *)extendedDataLocationForLatitude:(double)latitude longitude:(double)longitude {
+	// Coordinates sent to server in order (longitude, latitude)
+	NSDictionary *location = @{@"location": @{@"version": @1,
+											  @"coordinates": @[@(longitude), @(latitude)]
+											  }
+							   };
+	
+	return location;
+}
+
+
++ (NSDictionary *)extendedDataCommerceWithTransactionID:(NSString *)transactionID
+											affiliation:(NSString *)affiliation
+												revenue:(NSNumber *)revenue
+											   shipping:(NSNumber *)shipping
+													tax:(NSNumber *)tax
+											   currency:(NSString *)currency
+										  commerceItems:(NSArray *)commerceItems
+{
+	
+	NSMutableDictionary *commerce = [NSMutableDictionary dictionary];
+	commerce[@"version"] = @1;
+	
+	if (transactionID) {
+		commerce[@"id"] = transactionID;
+	}
+	
+	if (affiliation) {
+		commerce[@"affiliation"] = affiliation;
+	}
+	
+	if (revenue) {
+		commerce[@"revenue"] = revenue;
+	}
+	
+	if (shipping) {
+		commerce[@"shipping"] = shipping;
+	}
+	
+	if (tax) {
+		commerce[@"tax"] = tax;
+	}
+	
+	if (currency) {
+		commerce[@"currency"] = currency;
+	}
+	
+	if (commerceItems) {
+		commerce[@"items"] = commerceItems;
+	}
+	
+	return @{@"commerce": commerce};
+}
+
++ (NSDictionary *)extendedDataCommerceItemWithItemID:(NSString *)itemID
+												name:(NSString *)name
+											category:(NSString *)category
+											   price:(NSNumber *)price
+											quantity:(NSNumber *)quantity
+											currency:(NSString *)currency
+{
+	NSMutableDictionary *commerceItem = [NSMutableDictionary dictionary];
+	commerceItem[@"version"] = @1;
+
+	if (itemID) {
+		commerceItem[@"id"] = itemID;
+	}
+	
+	if (name) {
+		commerceItem[@"name"] = name;
+	}
+	
+	if (category) {
+		commerceItem[@"category"] = category;
+	}
+	
+	if (price) {
+		commerceItem[@"price"] = price;
+	}
+	
+	if (quantity) {
+		commerceItem[@"quantity"] = quantity;
+	}
+	
+	if (currency) {
+		commerceItem[@"currency"] = currency;
+	}
+	
+	return commerceItem;
 }
 
 - (void)presentMessageCenterFromViewController:(UIViewController *)viewController {
