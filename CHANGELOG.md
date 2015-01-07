@@ -1,3 +1,21 @@
+2014-11-20 pkamb v1.6.1
+--------------------------------
+The 1.6.1 release contains an improved FeedbackDemo project for easily testing your Apptentive events and interactions. Simply input your API Key and custom events in the `defines.h` file, then tap the respective buttons in the demo app to engage those events.
+
+This release also fixes the default message text in the Ratings Prompt, which for some languages may have referenced Message Center when Message Center was disabled.
+
+We have also fixed an issue where some messages were not sorted correctly in Message Center, and toned down Apptentive logging in Release builds.
+
+2014-10-20 pkamb v1.6.0
+--------------------------------
+The 1.6.0 release adds the method `willShowInteractionForEvent:`, which returns YES if engaging the given event will cause an Interaction to be shown. 
+
+For example, `willShowInteractionForEvent:` returns YES if a survey is ready to be shown the next time you engage your survey-targeted event. You can thus use this method to hide a "Show Survey" button in your app if there is no survey to take.
+
+We have also fixed an issue with adding photos to Message Center on iOS 8 iPads, as well as some Xcode 6 static analyzer warnings.
+
+Finally, we have added xib-based Launch Images to the Apptentive demo app. This fixes an issue when presenting Message Center from landscape on iPhone 6 and 6 Plus devices. If you are experiencing the same problem, you will most likely need to add Launch Images for the new iPhone screen sizes to your parent app.
+
 2014-09-26 pkamb v1.5.8
 --------------------------------
 This release adds a number of fixes for the landscape presentation of Message Center in iOS 8. If you discover other iOS 8 issues in your app, please contact us!

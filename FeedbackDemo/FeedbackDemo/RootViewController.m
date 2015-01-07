@@ -13,8 +13,7 @@
 
 enum kRootTableSections {
 	kMessageCenterSection,
-	kRatingSection,
-	kSurveySection,
+	kEventSection,
 	kSectionCount
 };
 
@@ -23,10 +22,11 @@ enum kMessageCenterRows {
 	kMessageCenterRowCount
 };
 
-enum kSurveyRows {
-	kSurveyRowShowSurvey,
-	kSurveyRowShowSurveyWithTags,
-	kSurveyRowCount
+enum kEventRows {
+	kEventRowEvent1,
+	kEventRowEvent2,
+	kEventRowEvent3,
+	kEventRowCount
 };
 
 @interface RootViewController ()
@@ -115,8 +115,8 @@ enum kSurveyRows {
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-	if (section == kSurveySection) {
-		return kSurveyRowCount;
+	if (section == kEventSection) {
+		return kEventRowCount;
 	} else if (section == kMessageCenterSection) {
 		return kMessageCenterRowCount;
 	}
@@ -125,30 +125,22 @@ enum kSurveyRows {
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	static NSString *CellIdentifier = @"Cell";
-	static NSString *SurveyTagsCell = @"SurveyTagsCell";
 	
 	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
 	if (cell == nil) {
 		cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
 		cell.accessoryView = nil;
 	}
+	
 	cell.textLabel.textColor = [UIColor blackColor];
-	if (indexPath.section == kRatingSection) {
-		cell.textLabel.text = @"Engage `testRatingFlow` event";
-	} else if (indexPath.section == kSurveySection) {
-		if (indexPath.row == kSurveyRowShowSurvey) {
-			// Engagement Surveys
-			cell.textLabel.text = @"Engage 'showSurvey' event";
-			cell.textLabel.textColor = [UIColor blackColor];
-		} else if (indexPath.row == kSurveyRowShowSurveyWithTags) {
-			cell = [tableView dequeueReusableCellWithIdentifier:SurveyTagsCell];
-			if (cell == nil) {
-				cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:SurveyTagsCell] autorelease];
-			}
-			
-			cell.textLabel.text = @"Engage 'presentSurvey' event";
-			cell.textLabel.textColor = [UIColor blackColor];
-			//cell.detailTextLabel.text = [NSString stringWithFormat:@"presentSurvey"];
+	
+	if (indexPath.section == kEventSection) {
+		if (indexPath.row == kEventRowEvent1) {
+			cell.textLabel.text = [NSString stringWithFormat:@"Engage `%@` event", kApptentiveEvent1];
+		} else if (indexPath.row == kEventRowEvent2) {
+			cell.textLabel.text = [NSString stringWithFormat:@"Engage `%@` event", kApptentiveEvent2];
+		} else if (indexPath.row == kEventRowEvent3) {
+			cell.textLabel.text = [NSString stringWithFormat:@"Engage `%@` event", kApptentiveEvent3];
 		}
 	} else if (indexPath.section == kMessageCenterSection) {
 		if (indexPath.row == kMessageCenterRowShowMessageCenter) {
@@ -178,17 +170,14 @@ enum kSurveyRows {
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-	if (indexPath.section == kRatingSection) {
-		// Engagement Rating Flow Testing
-		[[ATConnect sharedConnection] engage:@"testRatingFlow" fromViewController:self];
-		
-		// Legacy method for forcing Ratings Flow to show
-		//[self showRating:nil];
-	} else if (indexPath.section == kSurveySection) {
-		if (indexPath.row == kSurveyRowShowSurvey) {
-			[[ATConnect sharedConnection] engage:@"showSurvey" fromViewController:self];
-		} else if (indexPath.row == kSurveyRowShowSurveyWithTags) {
-			[[ATConnect sharedConnection] engage:@"presentSurvey" fromViewController:self];
+	
+	if (indexPath.section == kEventSection) {
+		if (indexPath.row == kEventRowEvent1) {
+			[[ATConnect sharedConnection] engage:kApptentiveEvent1 fromViewController:self];
+		} else if (indexPath.row == kEventRowEvent2) {
+			[[ATConnect sharedConnection] engage:kApptentiveEvent2 fromViewController:self];
+		} else if (indexPath.row == kEventRowEvent3) {
+			[[ATConnect sharedConnection] engage:kApptentiveEvent3 fromViewController:self];
 		}
 	} else if (indexPath.section == kMessageCenterSection) {
 		if (indexPath.row == kMessageCenterRowShowMessageCenter) {
@@ -206,19 +195,18 @@ enum kSurveyRows {
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
 	NSString *title = nil;
-	if (section == kRatingSection) {
-		title = @"Ratings";
-	} else if (section == kSurveySection) {
-		title = @"Surveys";
+	if (section == kMessageCenterSection) {
+		title = @"Message Center";
+	} else if (section == kEventSection) {
+		title = @"Events";
 	}
+	
 	return title;
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
 	NSString *title = nil;
-	if (section == kRatingSection) {
-		title = nil;
-	} else if (section == kSurveySection) {
+	if (section == kEventSection) {
 		title = [NSString stringWithFormat:@"ApptentiveConnect v%@", kATConnectVersionString];
 	}
 	return title;
