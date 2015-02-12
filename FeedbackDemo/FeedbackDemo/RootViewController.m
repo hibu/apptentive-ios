@@ -26,6 +26,8 @@ enum kEventRows {
 	kEventRowEvent1,
 	kEventRowEvent2,
 	kEventRowEvent3,
+	kEventRowEvent4,
+	kEventRowEvent5,
 	kEventRowCount
 };
 
@@ -50,8 +52,6 @@ enum kEventRows {
 	tags = [[NSSet alloc] initWithObjects:@"demoTag", nil];
 	
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(unreadMessageCountChanged:) name:ATMessageCenterUnreadCountChangedNotification object:nil];
-	
-	[[ATConnect sharedConnection] engage:@"init" fromViewController:self];
 	
 	// Engage an event with customData and extendedData
 	NSDictionary *commerceItem = [ATConnect extendedDataCommerceItemWithItemID:@"SKU_123" name:@"unlock_everything" category:@"in_app_purchase" price:@(4.99) quantity:@(1) currency:@"USD"];
@@ -141,6 +141,10 @@ enum kEventRows {
 			cell.textLabel.text = [NSString stringWithFormat:@"Engage `%@` event", kApptentiveEvent2];
 		} else if (indexPath.row == kEventRowEvent3) {
 			cell.textLabel.text = [NSString stringWithFormat:@"Engage `%@` event", kApptentiveEvent3];
+		} else if (indexPath.row == kEventRowEvent4) {
+			cell.textLabel.text = [NSString stringWithFormat:@"Engage `%@` event", kApptentiveEvent4];
+		} else if (indexPath.row == kEventRowEvent5) {
+			cell.textLabel.text = [NSString stringWithFormat:@"Engage `%@` event", kApptentiveEvent5];
 		}
 	} else if (indexPath.section == kMessageCenterSection) {
 		if (indexPath.row == kMessageCenterRowShowMessageCenter) {
@@ -178,6 +182,10 @@ enum kEventRows {
 			[[ATConnect sharedConnection] engage:kApptentiveEvent2 fromViewController:self];
 		} else if (indexPath.row == kEventRowEvent3) {
 			[[ATConnect sharedConnection] engage:kApptentiveEvent3 fromViewController:self];
+		} else if (indexPath.row == kEventRowEvent4) {
+			[[ATConnect sharedConnection] engage:kApptentiveEvent4 fromViewController:self];
+		} else if (indexPath.row == kEventRowEvent5) {
+			 [[ATConnect sharedConnection] engage:kApptentiveEvent5 fromViewController:self];
 		}
 	} else if (indexPath.section == kMessageCenterSection) {
 		if (indexPath.row == kMessageCenterRowShowMessageCenter) {
