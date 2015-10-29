@@ -11,17 +11,11 @@
 #import "ATAPIRequest.h"
 #import "ATConversation.h"
 
-NSString *const ATCurrentConversationPreferenceKey;
+extern NSString *const ATCurrentConversationPreferenceKey;
 
 @protocol ATConversationUpdaterDelegate;
 
-@interface ATConversationUpdater : NSObject <ATAPIRequestDelegate> {
-@private
-	NSObject<ATConversationUpdaterDelegate> *delegate;
-	ATAPIRequest *request;
-	BOOL creatingConversation;
-}
-@property (nonatomic, assign) NSObject<ATConversationUpdaterDelegate> *delegate;
+@interface ATConversationUpdater : NSObject <ATAPIRequestDelegate>@property (nonatomic, weak) NSObject<ATConversationUpdaterDelegate> *delegate;
 + (BOOL)conversationExists;
 + (ATConversation *)currentConversation;
 + (BOOL)shouldUpdate;

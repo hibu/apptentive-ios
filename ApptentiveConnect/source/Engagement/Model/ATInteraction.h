@@ -6,7 +6,6 @@
 //  Copyright (c) 2013 Apptentive, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
 @class ATInteractionUsageData;
@@ -16,7 +15,6 @@ typedef NS_ENUM(NSInteger, ATInteractionType){
 	ATInteractionTypeUpgradeMessage,
 	ATInteractionTypeEnjoymentDialog,
 	ATInteractionTypeRatingDialog,
-	ATInteractionTypeFeedbackDialog,
 	ATInteractionTypeMessageCenter,
 	ATInteractionTypeAppStoreRating,
 	ATInteractionTypeSurvey,
@@ -28,7 +26,7 @@ typedef NS_ENUM(NSInteger, ATInteractionType){
 @property (nonatomic, copy) NSString *identifier;
 @property (nonatomic, assign) NSInteger priority;
 @property (nonatomic, copy) NSString *type;
-@property (nonatomic, retain) NSDictionary *configuration;
+@property (nonatomic, strong) NSDictionary *configuration;
 @property (nonatomic, copy) NSString *version;
 @property (nonatomic, copy) NSString *vendor;
 
@@ -44,5 +42,6 @@ typedef NS_ENUM(NSInteger, ATInteractionType){
 
 - (BOOL)engage:(NSString *)event fromViewController:(UIViewController *)viewController;
 - (BOOL)engage:(NSString *)event fromViewController:(UIViewController *)viewController userInfo:(NSDictionary *)userInfo;
+- (BOOL)engage:(NSString *)event fromViewController:(UIViewController *)viewController userInfo:(NSDictionary *)userInfo customData:(NSDictionary *)customData extendedData:(NSArray *)extendedData;
 
 @end

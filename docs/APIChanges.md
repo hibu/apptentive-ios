@@ -1,5 +1,28 @@
 This document tracks changes to the API between versions.
 
+# 2.0.2
+
+ * ATConnect's tintColor property is now deprecated in favor of using UIAppearance properties. See the iOS Customization Guide for details. 
+
+# 2.0.0
+
+ * ApptentiveConnect now has a deployment target of iOS 7.0, which will support iOS 7, 8, and 9. In the 2.0.0 release we have dropped support for iOS 5 and 6.
+ * The ApptentiveConnect project has been converted to use Automatic Reference Counting (ARC).
+ * Message Center UI has been redesigned and improved. Message Center strings and settings are now delivered from the server, allowing you to make remote changes at any time from the Apptentive dashboard.
+ * The one-way Feedback Dialog has been removed in favor of Message Center and two-way conversations.
+ * Added `canShowMessageCenter` method. If SDK has not yet synced with Apptentive, you will be unable to display Message Center. Use `canShowMessageCenter` to determine if Message Center is ready to be displayed. If Message Center is not ready you could, for example, hide the "Message Center" button in your interface.
+ * Added `BOOL` return value to the `presentMessageCenterFromViewController:` methods. Indicates if Message Center was displayed. If `NO`, a "We're attempting to connect" view is displayed instead.
+ * Added `canShowInteractionForEvent:` and deprecated `willShowInteractionForEvent:` to better match the `canShowMessageCenter` naming convention.
+ * Added `personName` and `personEmailAddress` properties to `ATConnect`. Set these to pre-populate the respective field in Message Center.
+ * Removed `initialUserName` and `initialUserEmailAddress` properties in favor of the above `personName` and `personEmailAddress`.
+ * Added Apptentive Push Notifications, which can be activated via your Apptentive dashboard. You can now implement Push Notifications for new Message Center messages without needing your own Urban Airship, Parse, or Amazon SNS account.
+ * Added `setPushNotificationIntegration:withDeviceToken:` method for setting a Push Notification Provider. Use the `ATPushProvider` enum to specify a service provider, along with the `deviceToken` from `application:didRegisterForRemoteNotificationsWithDeviceToken:`. Currently supported Push Notification service providers include Apptentive, Urban Airship, Amazon SNS, and Parse.
+ * In light of the new `setPushNotificationIntegration:withDeviceToken:` method, removed the legacy integration API methods: `addIntegration:withConfiguration:`, `addIntegration:withDeviceToken:`, `removeIntegration:`, `addApptentiveIntegrationWithDeviceToken:`, `addUrbanAirshipIntegrationWithDeviceToken:`, `addAmazonSNSIntegrationWithDeviceToken:`, and `addParseIntegrationWithDeviceToken:`.
+ * Removed `useMessageCenter`, `initiallyUseMessageCenter`, and `initiallyHideBranding` properties.
+ * Added `-unreadMessageCountAccessoryView:(BOOL)apptentiveHeart`, a method that returns a UIView that can be used to display the current number of unread messages in Message Center (with an optional Apptentive heart logo). This is designed to be set as the `accessoryView` in a `UITableViewCell` that launches Message Center.
+ * Message Center is still presented via the `presentMessageCenterFromViewController:` API. However, if the device has not yet synced with Apptentive, Message Center will be unavailable and a "We're attempting to connect" screen will be displayed instead. This should occur rarely in production apps, but you may see it during development.
+ * Added an in-app banner that can be displayed when new Message Center messages arrive. This banner is toggled via the Apptentive dashboard, not via an API method. Implement the `viewControllerForInteractionsWithConnection:` delegate method to pass a View Controller from which to display Message Center after this banner is tapped. If no View Controller is provided, the SDK will attempt to find and use the top-most View Controller.
+
 # 1.6.0
 
  * Added `willShowInteractionForEvent:` method for determining if an interaction will be shown the next time you engage the given event.
@@ -15,19 +38,19 @@ This document tracks changes to the API between versions.
 
 # 1.5.4
  * Changed the App Store rating URL to open the "Reviews" tab directly in iOS 7.1+.
- 
+
  * Added API methods for attaching `customData` and `extendedData` to events:  
-  - `engage:withCustomData:fromViewController:` 
+  - `engage:withCustomData:fromViewController:`
   - `engage:withCustomData:withExtendedData:fromViewController:`
-  
+
  * Added methods to easily construct `extendedData` dictionaries in the specific Apptentive format:  
   - `extendedDataDate:`
   - `extendedDataLocationForLatitude:longitude:`
   - `extendedDataCommerceWithTransactionID:affiliation:revenue:shipping:tax:currency:commerceItems:`
   - `extendedDataCommerceItemWithItemID:name:category:price:quantity:currency:`
-  
+
 # 1.5.3
- 
+
  * Added ability to remotely hide Apptentive branding in your app via the Apptentive dashboard, contingent upon your account plan.
  * Added `initiallyHideBranding` property, which hides Apptentive branding in the time prior to the app's initial configuration being retrieved.
  * Removed `showTagLine` property, which has been replaced by `initiallyHideBranding` and the remote configuration.
@@ -74,7 +97,7 @@ The `initialUserEmailAddress` can now be updated after a user sends feedback wit
 
 Added a `BOOL` return type to the `engage:` method.
 
-Added the property `initiallyUseMessageCenter` to set the local, initial Message Center setting. This will be overridden by the server-based Message Center configuration when it is downloaded. 
+Added the property `initiallyUseMessageCenter` to set the local, initial Message Center setting. This will be overridden by the server-based Message Center configuration when it is downloaded.
 
 ## ATConnect
 

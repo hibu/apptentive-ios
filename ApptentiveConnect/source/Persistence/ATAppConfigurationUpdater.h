@@ -9,29 +9,25 @@
 #import <Foundation/Foundation.h>
 #import "ATAPIRequest.h"
 
-NSString *const ATConfigurationPreferencesChangedNotification;
-NSString *const ATAppConfigurationLastUpdatePreferenceKey;
-NSString *const ATAppConfigurationExpirationPreferenceKey;
-NSString *const ATAppConfigurationMetricsEnabledPreferenceKey;
-NSString *const ATAppConfigurationMessageCenterEnabledKey;
-NSString *const ATAppConfigurationHideBrandingKey;
+extern NSString *const ATConfigurationPreferencesChangedNotification;
+extern NSString *const ATAppConfigurationExpirationPreferenceKey;
+extern NSString *const ATAppConfigurationMetricsEnabledPreferenceKey;
+extern NSString *const ATAppConfigurationHideBrandingKey;
+extern NSString *const ATAppConfigurationNotificationPopupsEnabledKey;
 
-NSString *const ATAppConfigurationMessageCenterTitleKey;
-NSString *const ATAppConfigurationMessageCenterForegroundRefreshIntervalKey;
-NSString *const ATAppConfigurationMessageCenterBackgroundRefreshIntervalKey;
-NSString *const ATAppConfigurationMessageCenterEmailRequiredKey;
+extern NSString *const ATAppConfigurationMessageCenterForegroundRefreshIntervalKey;
+extern NSString *const ATAppConfigurationMessageCenterBackgroundRefreshIntervalKey;
 
-NSString *const ATAppConfigurationAppDisplayNameKey;
+extern NSString *const ATAppConfigurationAppDisplayNameKey;
 
 @protocol ATAppConfigurationUpdaterDelegate <NSObject>
 - (void)configurationUpdaterDidFinish:(BOOL)success;
 @end
 
-@interface ATAppConfigurationUpdater : NSObject <ATAPIRequestDelegate> {
-@private
-	ATAPIRequest *request;
-	NSObject<ATAppConfigurationUpdaterDelegate> *delegate;
-}
+@interface ATAppConfigurationUpdater : NSObject <ATAPIRequestDelegate>
+
+@property (nonatomic, weak) NSObject<ATAppConfigurationUpdaterDelegate> *delegate;
+
 + (BOOL)shouldCheckForUpdate;
 - (id)initWithDelegate:(NSObject<ATAppConfigurationUpdaterDelegate> *)delegate;
 - (void)update;
